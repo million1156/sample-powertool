@@ -1,0 +1,4 @@
+id = "synapse.plugin"
+name = "Example"
+description = "This is an example plugin."
+libraries = ['base', 'fs']
