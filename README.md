@@ -5,6 +5,16 @@ A powertool is a third party plugin which can extend [Hollywood](https://github.
 
 **Powertools are ran in a heavily sandboxed, restricted environment.** Only a tiny subset of standard JavaScript functions are imported into the environment by default, with extra functions and libraries requiring user consent to be imported.
 
+## Enabling powertools
+**By default, third party powertools are not enabled in Hollywood.** This is for safety purposes as third party powertools, even if sandboxed, increase the attack surface of the utility by a wide margin. Additionally, the API exposed to the environment isn't perfected yet and may currently have issues that lead to escapes. In order to use third party tools, you will have to explicitly enable them through flags.
+
+To create a Hollywood flag file, you have to create `flags.json` in the root directory of your installation if it doesn't already exist. The flag file contains a single object mapping flag names to their values, but in our case, we simply have to map the flag `enableThirdPartyPowertools` to `true`, like this:
+```json
+{ "enableThirdPartyPowertools": true }
+```
+
+When this flag is enabled, Hollywood will display a notice on every launch telling the user that third party powertools are enabled and listing the currently installed powertools. It also recommends the user to disable third party powertools by pressing "No" if he doesn't know what they are or if he didn't enable powertools himself. For safety purposes, there isn't a mechanism to disable this notice.
+
 ## Installing a powertool
 Powertools can be installed by extracting it into a folder within the `/plugins` directory in the root of your Hollywood installation (or in `/userconf/plugins` if running Hollywood via the commandline). Contrary to built-in powertools, locally installed powertools cannot be managed from the interface, meaning installation, uninstallation and updates must be done manually by the user. The name of the folder into which you extract your powertool is meaningless as the ID of the powertool is defined within its `plugin.toml` file.
 
