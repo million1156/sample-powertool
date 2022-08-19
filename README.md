@@ -15,6 +15,9 @@ To create a Hollywood flag file, you have to create `flags.json` in the root dir
 
 When this flag is enabled, Hollywood will display a notice on every launch telling the user that third party powertools are enabled and listing the currently installed powertools. It also recommends the user to disable third party powertools by pressing "No" if he doesn't know what they are or if he didn't enable powertools himself. For safety purposes, there isn't a mechanism to disable this notice.
 
+### **Enabling the experimental powertool compiler**
+If you want to use TypeScript, TypeScript React, or JavaScript React in your powertool, then you can also set the `enableExperimentalPowertoolCompiler` flag to `true` alongside the `enableThirdPartyPowertools` flag. When enabled, your plugin's entrypoint can now be `index.ts`, `index.tsx`, and `index.jsx`, depending on the language and featureset you want to use. If the experimental compiler is disabled, then only `index.js` will work correctly, and you will not have access to reactive syntax (however, [hyperscript-like programming is _still_ possible with the `h` function](http://jsfiddle.net/developit/e281k4wz/), which is offered in the environment. Bear in mind however that only functional components are supported, so that example may not work without some modifications.)
+
 ## Installing a powertool
 Powertools can be installed by extracting it into a folder within the `/plugins` directory in the root of your Hollywood installation (or in `/userconf/plugins` if running Hollywood via the commandline). Contrary to built-in powertools, locally installed powertools cannot be managed from the interface, meaning installation, uninstallation and updates must be done manually by the user. The name of the folder into which you extract your powertool is meaningless as the ID of the powertool is defined within its `plugin.toml` file.
 
@@ -40,7 +43,243 @@ Creating a powertool is a relatively easy process for any JavaScript developer.
 
 **Note**: More fields are supported, but are currently useless or irrelevant for third party powertools.
 
-### Hooks
-Powertools can extend interface behavior using hooks, which are essentially event listeners that accept variables and content created or accessed by the software at specific points in time. They are the only way a powertool can gain semantically useful information and access to core libraries of the interface. The list of hooks currently supported by Hollywood can be found in its [respective source file](https://github.com/synllc/hollywood/blob/main/src/renderer/hooks.ts), but this sample project should showcase the most useful ones.
+# Library
+A powertool's execution environment comes with two default libraries: `hollywood` and `powertool`. These two offer relatively safe functions that any powertool can use to extend the functionality of the editor. Additional libraries requiring special permissions can be loaded too, as stated above. **Note:** wherever an 'icon' string is referenced, it refers to an [Iconify icon string](https://icon-sets.iconify.design/), which goes in the following format: `iconset-iconname`.
+
+## **Hollywood APIs**
+```ts
+// Request to a webserver.
+async hollywood.request(options: Request) => Promise<Response>;
+
+interface Request {
+    url: string,
+    method?: string,
+    headers?: Record<string, string>,
+    cookies?: string,
+    body?: string
+}
+
+interface Response {
+    success: boolean,
+    statusCode: number,
+    statusMessage: string,
+    headers: Record<string, string>,
+    cookies: string,
+    body: string
+}
+```
+Asynchronously send a request to a remote webserver. The functionality of this API is almost the same as `syn.request` on the Lua side, except that it doesn't pass any of the special headers that Synapse usually attaches to the request.
+
+```ts
+hollywood.notification(type: 'information' | 'success' | 'warning' | 'error', title: string, description: string) => void;
+```
+Displays a notification in the UI. It's that simple.
+
+## **Powertool APIs**
+### **Page creation**
+```ts
+powertool.createPage(id: string, name: string, icon: string, element: preact.ComponentChild) => void;
+```
+This function creates a new page in the UI from the identifier, name, icon and [preact](https://preactjs.com/) component provided. A powertool can create as many pages, but once created, cannot be removed. **Read below for a list of available components.**
+### **Toolbars**
+```ts
+// Create toolbar.
+powertool.createToolbar(editor: Editor, toolbarId: string, toolbarEntries: ToolbarEntry[]) => void;
+
+// Remove toolbar.
+powertool.removeToolbar(editor: Editor, toolbarId: string) => void;
+
+// Toolbar entry object.
+interface ToolbarEntry {
+    id: string;     // Identifier of button.
+    icon: string;   // Icon of button.
+    text: string;   // Tooltip that shows when hovering the button.
+    callback: () => void; // Callback that executes when pressed.
+}
+```
+Creates or removes a toolbar using the entries provided. A toolbar cannot be updated after creation, but can be removed and re-inserted when needed. The toolbar displays on top of the editor, like in this example:
+
+![Example demonstrating toolbar use.](https://cdn.discordapp.com/attachments/1008559488804077639/1008812197696250019/unknown.png)
+
+### **Nodes**
+```ts
+// Callback invoked when node connects.
+powertool.node.onMount(callback: (node: number) => void) => void;
+
+// Callback invoked when node disconnects.
+powertool.node.onUnmount(callback: (node: number) => void) => void;
+
+// Returns all connected nodes.
+powertool.node.list() => number[];
+```
+`onMount` and `onUnmount` allows you to assign a single event callback for when a node connects or disconnects from the editor's server. **Only one callback may be assigned per powertool at a time**. If your powertool needs to retrieve all available nodes, it may arbitrarily call `list`. In powertool APIs, nodes are represented as numbers, and can be used as unique identifiers.
+
+### **Lua**
+```ts
+// Listen to packets sent from Lua.
+powertool.lua.listen(callback: (nodeId: number, receipt: object, reply?: Function) => void) => void;
+
+// Send a packet to Lua from the powertool.
+powertool.lua.send(nodeId: number, replyToken: string, data: string) => void;
+```
+`listen` can be used to listen to incoming Lua packets sent with `syn.ipc_send`. All serializable parameters passed to `syn.ipc_send` will be available in the `receipt` object, and if a `reply` field was included in the object, then the `reply` function in the callback will be defined, allowing you to quickly respond with any string-based value.
+
+`send` can be used to send a packet to the Lua runtime that can be intercepted with a function stored in `getgenv()._reply` within a Lua script. Even though the global reply function is principally meant to listen to replies to packets sent through `syn.ipc_send`, the UI can invoke it at any time using the `send` API, passing a custom reply token as the second argument. If you want to send data anymore complex than a string, such as an object, then we recommend you serialize the data with JSON and deserialize it in the Lua runtime.
+
+`powertool.node.list` and `powertool.lua.send` can be combined to send a single packet to all connected node. For example:
+```js
+for (const nodeId of powertool.node.list()) {
+    powertool.lua.send(nodeId, 'incoming-token', 'Sent data goes here!');
+}
+```
+## **Filesystem APIs**
+**Note:** For this library to be enabled, you must specify the `fs` module in your plugin's configuration file. Your access to the filesystem is also sandboxed to your powertool's installation directory, and there is a size limit for written files. All files are read and written in `UTF-8` encoding.
+```ts
+// Reads a file and returns it. Errors if missing.
+hollywood.readFile(filePath: string) => string;
+
+// Writes or overwrites a file.
+hollywood.writeFile(filePath: string, contents: string) => void;
+
+// Appends a string to a file.
+hollywood.appendFile(filePath: string, contents: string) => void;
+
+// Lists all files and directories in the path provided.
+hollywood.listFiles(dirPath: string) => string[];
+
+// Returns whether the path is a file or a folder.
+hollywood.isFile(somePath: string) => boolean;
+hollywood.isFolder(somePath: string) => boolean;
+
+// Creates a folder. Errors if it already exists.
+hollywood.makeFolder(dirPath: string) => void;
+
+// Deletes folder and its contents or a file. Errors if it doesn't exist.
+hollywood.deleteFolder(dirPath: string) => void;
+hollywood.deleteFile(filePath: string) => void;
+```
+
+## **Hooks**
+Powertools can extend interface behavior using hooks, which are essentially event listeners that accept variables and content created or accessed by the software at specific points in time. They are the only way a powertool can gain semantically useful information and access to core libraries of the interface.
+
+Hooks can be registered using the `powertool.registerHooks` API, which is already available in a powertool's execution environment without having to import/require any modules. The following hooks are available (all are optional in the object passed to `registerHooks`):
+```ts
+{
+    tab: {
+        /* Invoked when tab is saved. */
+        onSave?: (tab: Tab) => void;
+  
+        /* Invoked when tab context menu is created (not displayed). */
+        onContext?: (tab: Tab, context: ContextMenu) => void;
+    },
+
+    editor: {
+        /* Invoked when tab is created. */
+        onTabMount?: (tab: Tab) => void;
+
+        /* Invoked when tab is unmounted. */
+        onTabUnmount?: (tab: Tab) => void;
+
+        /* Invoked when editor is created. */
+        onCreate?: (editor: Editor) => void;
+    },
+
+    language: Array<
+        {
+            // Path to the language server's installation directory.
+            readonly path: string;
+
+            // Name of the language server.
+            readonly name: string;
+
+            // Auxiliary information (optional).
+            readonly aux?: {
+                uri: string;
+                version: string;
+                description: string;
+            }
+
+            // Path to application binaries, relative to .path.
+            // Windows is obligatory, darwin/linux is optional.
+            readonly binaries: {
+                windows: string;
+                darwin?: string;
+                linux?: string;
+            }
+        }
+    >;
+}
+```
 
 We recommend looking at `index.js` to view an example of how hooks are installed from a powertool.
+
+## **Components**
+Included in the powertool's environment is everything you need to build reactive interfaces with [preact](https://preactjs.com/), a minimal and lightweight alternative to React. There is no need to import anything as all hooks, components and related libraries are pre-included in the powertool. Components are styled depending on the user's chosen theme, so try not to make too much assumptions based on the layout or look of the interface if you are using custom styles.
+
+- `Components.Button`  
+Creates a button. Example usage:
+```jsx
+<Components.Button onClick={() => console.log('Hi!')}>
+    Hello world!
+</Components.Button>
+```
+- `Components.Checkbox`  
+Creates a checkbox. **Children is not supported.** Example usage:  
+```jsx
+<Components.Checkbox caption="My checkbox" description="My description" value={false} onToggle={value => console.log(value)} />
+```
+- `Components.Dropdown`  
+Creates a dropdown. The `selectIndex` property is used to indicate the current option chosen, and is zero-indexed. Example usage:
+```jsx
+<Components.Dropdown caption="My dropdown" description="My description" onIndex={(caption, index) => console.log(index)} selectIndex={0}>
+    <Components.DropdownOption>
+        Option 1
+    </Components.DropdownOption>
+    <Components.DropdownOption>
+        Option 2
+    </Components.DropdownOption>
+    <Components.DropdownOption>
+        Option 3
+    </Components.DropdownOption>
+</Components.Dropdown>
+```
+- `Components.Slider`  
+Creates a slider. **Children is not supported.** Example usage:  
+```jsx
+<Components.Slider
+    caption="My slider"
+    description="My description"
+    value={0}
+    minimum={-100}
+    maximum={100}
+    step={2}
+    onChange={(value) => console.log(value)}
+/>
+```
+- `Components.TextBox`  
+Creates a textbox. **Children is not supported.**  Example usage:  
+```jsx
+<Components.TextBox
+    value="Current value of the textbox"
+    placeholder="Transparent placeholder when there's no value"
+    label="My textbox"
+    description="My description"
+    icon="An iconify-based icon"
+    password={false}
+    onChange={(value) => console.log(value)}
+/>
+```
+- `Components.Tree`  
+Creates a browsable list of nodes. Documentation pending. A tree is far more complex to create and display than any of the other components. Stay tuned.
+
+- `Components.SafeImage`  
+Creates a safely viewable image. **Children is not supported.**   Example usage:  
+```jsx
+<Components.SafeImage src='uri/to/image.png'/>
+```
+
+- `Components.Icon`  
+Creates an icon. Example usage:  
+```jsx
+<Components.Icon icon='iconify-based-icon-here'/>
+```
