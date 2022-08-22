@@ -213,6 +213,27 @@ Hooks can be registered using the `powertool.registerHooks` API, which is alread
 
 We recommend looking at `index.js` to view an example of how hooks are installed from a powertool.
 
+## **Importing data and Lua scripts**
+Local assets relevant to your powertool may be obtained through their specialized `import` syntax. For instance, if you need to display an image in your powertool, can do this:
+```ts
+// Only jpg, jpeg, png, gif and svg formats are supported.
+
+import myImage from './my-image.png'
+
+function myComponent() {
+    return <Components.SafeImage src={myImage}/>
+}
+```
+### **Lua scripts**
+Static Lua scripts packed alongside your powertool can be accessed and executed also through a specialized `import` syntax. If you have a script named `my-script.lua` in your powertool's installation directory, and you want to run it when a node mounts (imitating `autoexec` behavior), then you can do the following:
+```ts
+import runMyScript from './my-script.lua'
+
+powertool.node.onMount(node => runMyScript(node))
+```
+A Lua script import returns a function that executes the script on any node passed. It cannot however pass any arguments or parameters to the script; if you want to do so, use the powertool communication interfaces.
+
+
 ## **Components**
 Included in the powertool's environment is everything you need to build reactive interfaces with [preact](https://preactjs.com/), a minimal and lightweight alternative to React. There is no need to import anything as all hooks, components and related libraries are pre-included in the powertool. Components are styled depending on the user's chosen theme, so try not to make too much assumptions based on the layout or look of the interface if you are using custom styles.
 
