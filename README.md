@@ -15,9 +15,6 @@ To create a Hollywood flag file, you have to create `flags.json` in the root dir
 
 When this flag is enabled, Hollywood will display a notice on every launch telling the user that third party powertools are enabled and listing the currently installed powertools. It also recommends the user to disable third party powertools by pressing "No" if he doesn't know what they are or if he didn't enable powertools himself. For safety purposes, there isn't a mechanism to disable this notice.
 
-### **Enabling the experimental powertool compiler**
-If you want to use TypeScript, TypeScript React, or JavaScript React in your powertool, then you can also set the `enableExperimentalPowertoolCompiler` flag to `true` alongside the `enableThirdPartyPowertools` flag. When enabled, your plugin's entrypoint can now be `index.ts`, `index.tsx`, and `index.jsx`, depending on the language and featureset you want to use. If the experimental compiler is disabled, then only `index.js` will work correctly, and you will not have access to reactive syntax (however, [hyperscript-like programming is _still_ possible with the `h` function](https://github.com/developit/preact-without-babel), which is offered in the environment.)
-
 ## Installing a powertool
 Powertools can be installed by extracting it into a folder within the `/plugins` directory in the root of your Hollywood installation (or in `/userconf/plugins` if running Hollywood via the commandline). Contrary to built-in powertools, locally installed powertools cannot be managed from the interface, meaning installation, uninstallation and updates must be done manually by the user. The name of the folder into which you extract your powertool is meaningless as the ID of the powertool is defined within its `plugin.toml` file.
 
