@@ -103,7 +103,7 @@ Creates or removes a toolbar using the entries provided. A toolbar cannot be upd
 ### **Nodes**
 ```ts
 // Callback invoked when node connects.
-.node.onMount(callback: (node: number) => void) => void;
+node.onMount(callback: (node: number) => void) => void;
 
 // Callback invoked when node disconnects.
 node.onUnmount(callback: (node: number) => void) => void;
@@ -228,7 +228,7 @@ Static Lua scripts packed alongside your powertool can be accessed and executed 
 ```ts
 import runMyScript from './my-script.lua'
 
-powertool.node.onMount(node => runMyScript(node))
+node.onMount(node => runMyScript(node))
 ```
 A Lua script import returns a function that executes the script on any node passed. It cannot however pass any arguments or parameters to the script; if you want to do so, use the powertool communication interfaces.
 
