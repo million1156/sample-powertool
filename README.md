@@ -32,8 +32,10 @@ Creating a powertool is a relatively easy process for any JavaScript developer.
 | `settings` | `Schema[]` (optional) | Schematic-based settings in the same format as configurable script scripts and cloud settings. The format can be viewed in Hollywood's [source code](https://github.com/synllc/hollywood/blob/main/src/settings.ts). Defaults to `undefined`. |
 | `libraries` | `string[]` (optional) | Libraries the powertool can request to import. Currently supported libraries are `base`, `fs`, `settings` and `settings-w`. Defaults to `['base']`. |
 
-**Supported libraries:** (as of June 27, 2022)
+**Supported libraries:** (as of August 24, 2022)
 - `base`: _Included by default._ Base functions for interacting with the interface. Includes functions such as `hollywood.notification` to create notifications, or `hollywood.request` to make asynchronous web requests. This library is always imported even not included in `libraries.`
+- `lua`: Functions for interacting with the Lua engine, namely `lua.send` and `lua.listen`. Read below for more dertails.
+- `node`: Library for manipulating connected nodes and listening to their events. Read below for more details.
 - `fs`: Synapse-like functions for interacting with the powertool's sandboxed filesystem, such as `hollywood.readFile` and `hollywood.writeFile`. FS access is limited to `/config/powertools/{powertool.id}` and there are rigorous checks to prevent accessing any other part of the filesystem.
 - `settings`: Imports `hollywood.settings`, which allows the library to read settings using `hollywood.settings.get`.
 - `settings-w`: When used in conjunction with `settings`, it imports `hollywood.settings.set`, which can update interface and core settings. **User permission must be granted before this library becomes usable.**
