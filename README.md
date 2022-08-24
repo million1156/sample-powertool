@@ -103,32 +103,32 @@ Creates or removes a toolbar using the entries provided. A toolbar cannot be upd
 ### **Nodes**
 ```ts
 // Callback invoked when node connects.
-powertool.node.onMount(callback: (node: number) => void) => void;
+.node.onMount(callback: (node: number) => void) => void;
 
 // Callback invoked when node disconnects.
-powertool.node.onUnmount(callback: (node: number) => void) => void;
+node.onUnmount(callback: (node: number) => void) => void;
 
 // Returns all connected nodes.
-powertool.node.list() => number[];
+node.list() => number[];
 ```
 `onMount` and `onUnmount` allows you to assign a single event callback for when a node connects or disconnects from the editor's server. **Only one callback may be assigned per powertool at a time**. If your powertool needs to retrieve all available nodes, it may arbitrarily call `list`. In powertool APIs, nodes are represented as numbers, and can be used as unique identifiers.
 
 ### **Lua**
 ```ts
 // Listen to packets sent from Lua.
-powertool.lua.listen(callback: (nodeId: number, receipt: object, reply?: Function) => void) => void;
+lua.listen(callback: (nodeId: number, receipt: object, reply?: Function) => void) => void;
 
 // Send a packet to Lua from the powertool.
-powertool.lua.send(nodeId: number, replyToken: string, data: string) => void;
+lua.send(nodeId: number, replyToken: string, data: string) => void;
 ```
 `listen` can be used to listen to incoming Lua packets sent with `syn.ipc_send`. All serializable parameters passed to `syn.ipc_send` will be available in the `receipt` object, and if a `reply` field was included in the object, then the `reply` function in the callback will be defined, allowing you to quickly respond with any string-based value.
 
 `send` can be used to send a packet to the Lua runtime that can be intercepted with a function stored in `getgenv()._reply` within a Lua script. Even though the global reply function is principally meant to listen to replies to packets sent through `syn.ipc_send`, the UI can invoke it at any time using the `send` API, passing a custom reply token as the second argument. If you want to send data anymore complex than a string, such as an object, then we recommend you serialize the data with JSON and deserialize it in the Lua runtime.
 
-`powertool.node.list` and `powertool.lua.send` can be combined to send a single packet to all connected node. For example:
+`node.list` and `lua.send` can be combined to send a single packet to all connected node. For example:
 ```js
-for (const nodeId of powertool.node.list()) {
-    powertool.lua.send(nodeId, 'incoming-token', 'Sent data goes here!');
+for (const nodeId of node.list()) {
+    lua.send(nodeId, 'incoming-token', 'Sent data goes here!');
 }
 ```
 ## **Filesystem APIs**
