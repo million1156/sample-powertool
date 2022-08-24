@@ -304,3 +304,16 @@ Creates an icon. Example usage:
 ```jsx
 <Components.Icon icon='iconify-based-icon-here'/>
 ```
+
+- `Components.Menu` and `Components.Page`  
+Creates a navigable menu. Example usage:  
+```jsx
+powertool.createPage('example-page', 'Example Page', 'fluent:page-20-filled', 
+    <Components.Menu>
+        <Components.Page id="example" title="Example page" icon="fluent:weather-sunny-low-20-filled">
+            <Components.Button>Hello world!</Components.Button>
+        </Components.Page>
+    </Components.Menu>
+);
+```
+
