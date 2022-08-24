@@ -30,7 +30,7 @@ Creating a powertool is a relatively easy process for any JavaScript developer.
 | `name` | `string` | Human-readable name of powertool. Make sure it's not anything too arcane. |
 | `description` | `string` | This should describe what the powertool does in a preferably short sentence. |
 | `settings` | `Schema[]` (optional) | Schematic-based settings in the same format as configurable script scripts and cloud settings. The format can be viewed in Hollywood's [source code](https://github.com/synllc/hollywood/blob/main/src/settings.ts). Defaults to `undefined`. |
-| `libraries` | `string[]` (optional) | Libraries the powertool can request to import. Currently supported libraries are `base`, `fs`, `settings` and `settings-w`. Defaults to `['base']`. |
+| `libraries` | `string[]` (optional) | Libraries the powertool can request to import. Currently supported libraries are listed below. Defaults to `['base']`. |
 
 **Supported libraries:** (as of August 24, 2022)
 - `base`: _Included by default._ Base functions for interacting with the interface. Includes functions such as `hollywood.notification` to create notifications, or `hollywood.request` to make asynchronous web requests. This library is always imported even not included in `libraries.`
