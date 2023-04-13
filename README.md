@@ -1,7 +1,7 @@
 **Note: The powertool specification is not final and is currently in heavy development.** Structures, libraries and file formats may change at any given time. This repository was created because some of our beta testers are interested in trying and testing the powertool APIs.
 
 # Sample Powertool project
-A powertool is a third party plugin which can extend [Hollywood](https://github.com/synllc/hollywood)'s functionality using a built-in hooking library. The powertool standard follows a [Deno-style permission system](https://deno.land/manual/getting_started/permissions), requiring the user to manually approve a powertool's access to more sensitive APIs (such as settings or the filesystem), meaning plugins don't get to access all information contained in Hollywood without the user's explicit consent.
+A powertool is a third party plugin which can extend Hollywood's functionality using a built-in hooking library. The powertool standard follows a [Deno-style permission system](https://deno.land/manual/getting_started/permissions), requiring the user to manually approve a powertool's access to more sensitive APIs (such as settings or the filesystem), meaning plugins don't get to access all information contained in Hollywood without the user's explicit consent.
 
 **Powertools are ran in a heavily sandboxed, restricted environment.** Only a tiny subset of standard JavaScript functions are imported into the environment by default, with extra functions and libraries requiring user consent to be imported.
 
@@ -29,7 +29,7 @@ Creating a powertool is a relatively easy process for any JavaScript developer.
 | `id` | `string` | This is the identifier used to represent the powertool. |
 | `name` | `string` | Human-readable name of powertool. Make sure it's not anything too arcane. |
 | `description` | `string` | This should describe what the powertool does in a preferably short sentence. |
-| `settings` | `Schema[]` (optional) | Schematic-based settings in the same format as configurable script scripts and cloud settings. The format can be viewed in Hollywood's [source code](https://github.com/synllc/hollywood/blob/main/src/settings.ts). Defaults to `undefined`. |
+| `settings` | `Schema[]` (optional) | Schematic-based settings in the same format as configurable script scripts and cloud settings. Defaults to `undefined`. |
 | `libraries` | `string[]` (optional) | Libraries the powertool can request to import. Currently supported libraries are listed below. Defaults to `['base']`. |
 
 **Supported libraries:** (as of August 24, 2022)
